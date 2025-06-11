@@ -184,22 +184,34 @@ class TimezoneScreen(MDScreen):
         self.menu = MDDropdownMenu(
             caller=button,
             items=menu_items,
-            width_mult=1,  # Will be overridden by specific width  
+            width_mult=6,  # Even wider dropdown for better text display
             max_height=button.height * 6,  # Relative to button height (allows ~6 items)
             background_color=(1, 1, 1, 1),  # White background
-            elevation=4,  # Subtle elevation for definition
-            border_margin=dp(2),  # Small margin for visual separation
+            elevation=0,  # No elevation
+            border_margin=dp(0),
             position="center",  # Center on the button
         )
         
-        # Set exact width to match button after menu creation
+        # Add black outline border like the button (without constraining width)
         def setup_menu_appearance(dt):
             if self.menu and hasattr(self.menu, 'ids') and 'md_menu' in self.menu.ids:
                 menu_widget = self.menu.ids.md_menu
-                menu_widget.width = button.width
+                
+                # Add black border outline like the button
+                with menu_widget.canvas.after:
+                    from kivy.graphics import Color, Line
+                    Color(0, 0, 0, 1)  # Black border
+                    Line(
+                        rounded_rectangle=(
+                            menu_widget.x, menu_widget.y,
+                            menu_widget.width, menu_widget.height,
+                            dp(8)
+                        ),
+                        width=2
+                    )
                     
         from kivy.clock import Clock
-        Clock.schedule_once(setup_menu_appearance, 0.1)
+        Clock.schedule_once(setup_menu_appearance, 0.2)
         self.menu.open()
 
     def menu_callback(self, tz_name):
