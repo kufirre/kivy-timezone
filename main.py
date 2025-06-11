@@ -1,6 +1,5 @@
 from kivy.lang import Builder
 from kivymd.app import MDApp
-from kivymd.theming import ThemableBehavior
 from timezone_screen import TimezoneScreen
 from kivy.core.window import Window
 
@@ -12,7 +11,7 @@ class TimezoneApp(MDApp):
         self.theme_cls.accent_palette = "Gray"
         
         # Set window properties for desktop testing
-        Window.size = (380, 580)  # Slightly smaller for better fit
+        Window.size = (336, 536)  # Slightly smaller for better fit
         Window.minimum_width = 320
         Window.minimum_height = 480
         

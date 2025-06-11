@@ -1,41 +1,60 @@
-from kivymd.uix.screen import MDScreen
-from kivymd.uix.menu import MDDropdownMenu
-from kivymd.uix.list import OneLineListItem, TwoLineListItem
-from kivy.properties import StringProperty, BooleanProperty, NumericProperty
-from kivy.clock import Clock
-from kivy.metrics import dp
 import os
-import subprocess
 import platform
+import subprocess
+import time
+
 from datetime import datetime
 try:
     from zoneinfo import ZoneInfo
 except ImportError:
     from pytz import timezone as ZoneInfo
 
+from kivymd.uix.screen import MDScreen
+from kivymd.uix.menu import MDDropdownMenu
+from kivymd.uix.list import TwoLineListItem
+from kivy.properties import StringProperty, BooleanProperty, NumericProperty
+from kivy.clock import Clock
+from kivy.graphics import Color, Line
+from kivy.metrics import dp
+from kivymd.toast import toast
+
+
+
 # Enhanced list of timezones with better coverage
 TIMEZONES = [
+    ("Pacific/Honolulu", "Hawaii"),
+    ("America/Anchorage", "Alaska Time - US"),
     ("US/Pacific", "Pacific Time - US & Canada"),
+    ("America/Phoenix", "Arizona"),
     ("US/Mountain", "Mountain Time - US & Canada"),
     ("US/Central", "Central Time - US & Canada"),
     ("US/Eastern", "Eastern Time - US & Canada"),
+    ("America/Sao_Paulo", "São Paulo, Rio de Janeiro"),
+    ("America/Argentina/Buenos_Aires", "Buenos Aires"),
+    ("America/Halifax", "Atlantic Time - Canada"),
+    ("America/St_Johns", "Newfoundland"),
+    ("Atlantic/Azores", "Azores"),
+    ("UTC", "Coordinated Universal Time"),
     ("Europe/London", "London, Dublin"),
+    ("Africa/Lagos", "Lagos, Abuja"),
     ("Europe/Paris", "Paris, Berlin, Rome"),
     ("Europe/Stockholm", "Stockholm, Oslo, Copenhagen"),
     ("Europe/Moscow", "Moscow, St. Petersburg"),
-    ("Asia/Kolkata", "India Standard Time"),
-    ("Asia/Tokyo", "Japan Standard Time"),
-    ("Asia/Shanghai", "Beijing, Shanghai"),
-    ("Asia/Seoul", "Seoul"),
-    ("Asia/Dubai", "Dubai, Abu Dhabi"),
-    ("Australia/Sydney", "Sydney, Melbourne"),
-    ("Australia/Perth", "Perth"),
-    ("Pacific/Auckland", "Auckland, Wellington"),
-    ("America/Sao_Paulo", "São Paulo, Rio de Janeiro"),
-    ("America/Argentina/Buenos_Aires", "Buenos Aires"),
     ("Africa/Cairo", "Cairo"),
-    ("Africa/Lagos", "Lagos, Abuja"),
-    ("UTC", "Coordinated Universal Time"),
+    ("Asia/Dubai", "Dubai, Abu Dhabi"),
+    ("Asia/Karachi", "Pakistan Standard Time"),
+    ("Asia/Kolkata", "India Standard Time"),
+    ("Asia/Dhaka", "Bangladesh Standard Time"),
+    ("Asia/Jakarta", "Jakarta, Indonesia"),
+    ("Asia/Shanghai", "Beijing, Shanghai"),
+    ("Australia/Perth", "Perth"),
+    ("Asia/Singapore", "Singapore"),
+    ("Asia/Tokyo", "Japan Standard Time"),
+    ("Asia/Seoul", "Seoul"),
+    ("Australia/Darwin", "Darwin"),
+    ("Australia/Sydney", "Sydney, Melbourne"),
+    ("Pacific/Noumea", "New Caledonia"),
+    ("Pacific/Auckland", "Auckland, Wellington"),
 ]
 
 def get_utc_offset(tz_name):
@@ -56,6 +75,7 @@ class CustomMenuItem(TwoLineListItem):
         super().__init__(**kwargs)
         # Set consistent height for menu items
         self.height = dp(60)  # Fixed height for consistent spacing
+
 
 class TimezoneScreen(MDScreen):
     selected_timezone = StringProperty("")
@@ -119,7 +139,6 @@ class TimezoneScreen(MDScreen):
         
         # Fallback: try to get from datetime
         try:
-            import time
             return time.tzname[0] if hasattr(time, 'tzname') else 'UTC'
         except Exception:
             return "UTC"
@@ -177,7 +196,7 @@ class TimezoneScreen(MDScreen):
             self.current_timezone = self.selected_timezone
             
             # Show feedback to user
-            from kivymd.toast import toast
+
             display_name = next((d for t, d in TIMEZONES if t == self.selected_timezone), self.selected_timezone)
             toast(f"Timezone set to {display_name}")
             
@@ -197,15 +216,12 @@ class TimezoneScreen(MDScreen):
             utc_offset = get_utc_offset(tz_name)
             is_selected = (tz_name == self.selected_timezone)
             
-            # Shorten display name if too long
-            shortened_name = display_name if len(display_name) <= 45 else display_name[:42] + "..."
-            
             menu_items.append({
                 "viewclass": "CustomMenuItem", 
-                "text": shortened_name,
+                "text": display_name,
                 "secondary_text": f"{utc_offset} • {current_time}",
                 "on_release": lambda tz=tz_name: self.menu_callback(tz),
-                "md_bg_color": (0, 0, 0, 1) if is_selected else (1, 1, 1, 1),  # Black for selected, white for others
+                "bg_color": (0, 0, 0, 1) if is_selected else (1, 1, 1, 1),  # Black for selected, white for others
                 "text_color": (1, 1, 1, 1) if is_selected else (0, 0, 0, 1),  # White text on black, black text on white
                 "secondary_text_color": (0.8, 0.8, 0.8, 1) if is_selected else (0.4, 0.4, 0.4, 1),
                 "_no_ripple_effect": False,
@@ -214,40 +230,40 @@ class TimezoneScreen(MDScreen):
             })
             
         # Calculate dropdown width to match button width
-        button = self.ids.timezone_button
-        
+        button = self.timezone_button
+
         self.menu = MDDropdownMenu(
             caller=button,
             items=menu_items,
-            width=dp(50),  # Made wider to accommodate longer text
-            max_height=button.height * 6,  # Relative to button height (allows ~6 items)
-            md_bg_color=(1, 1, 1, 1),  # White background (updated property name)
+            max_height=button.height * 4,  # Relative to button height
             elevation=0,  # No elevation
             border_margin=dp(0),
-            position="center",  # Center on the button
         )
         
         # Add black outline border (without constraining width)
         def setup_menu_appearance(dt):
             if self.menu and hasattr(self.menu, 'ids') and 'md_menu' in self.menu.ids:
-                menu_widget = self.menu.ids.md_menu
+                self.menu.width = button.width
+                self.menu.x = button.x
+                self.menu.ids.md_menu.width = button.width
+                self.menu.ids.md_menu.x = button.x
                 
                 # Add black border outline like the button
+                menu_widget = self.menu.ids.md_menu
                 with menu_widget.canvas.after:
-                    from kivy.graphics import Color, Line
+
                     Color(0, 0, 0, 1)  # Black border
                     Line(
                         rounded_rectangle=(
                             menu_widget.x, menu_widget.y,
-                            menu_widget.width, menu_widget.height,
+                            button.width, menu_widget.height,
                             dp(8)
                         ),
                         width=2
                     )
-                    
-        from kivy.clock import Clock
-        Clock.schedule_once(setup_menu_appearance, 0.2)
+
         self.menu.open()
+        Clock.schedule_once(setup_menu_appearance)
 
     def menu_callback(self, tz_name):
         """Handle timezone selection."""
@@ -256,7 +272,6 @@ class TimezoneScreen(MDScreen):
             self.menu.dismiss()
             
         # Show feedback to user
-        from kivymd.toast import toast
         display_name = next((d for t, d in TIMEZONES if t == tz_name), tz_name)
         toast(f"Timezone changed to {display_name}")
         
@@ -286,16 +301,12 @@ class TimezoneScreen(MDScreen):
                                  check=True, capture_output=True)
             
             self.current_timezone = tz_name
-            from kivymd.toast import toast
             toast("System timezone updated successfully!")
             
         except subprocess.CalledProcessError:
-            from kivymd.toast import toast
             toast("Could not update system timezone - permission denied")
         except PermissionError:
-            from kivymd.toast import toast
             toast("Permission denied - run with administrator privileges")
         except Exception as e:
-            from kivymd.toast import toast
             toast(f"Failed to update system timezone: {str(e)}")
 

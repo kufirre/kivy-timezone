@@ -3,6 +3,9 @@
     theme_text_color: "Custom"
     secondary_theme_text_color: "Custom"
     divider_color: 0.3, 0.3, 0.3, 1
+    shorten: True
+    shorten_from: 'right'
+    text_size: self.width, None
     canvas.after:
         Color:
             rgba: 0.3, 0.3, 0.3, 1  # Gray divider line
@@ -13,154 +16,147 @@
 <TimezoneScreen>:
     name: "timezone_screen"
     md_bg_color: 1, 1, 1, 1  # White background
+    timezone_button: timezone_button
 
-    MDBoxLayout:
-        orientation: "vertical"
-        spacing: 0
-
+    MDFloatLayout:
         # Header
         MDTopAppBar:
             title: "Timezone Settings"
             elevation: 0
             specific_text_color: 1, 1, 1, 1  # White text
             md_bg_color: 0, 0, 0, 1  # Black background
-            size_hint_y: None
-            height: dp(56)
+            size_hint_y: 0.12
+            pos_hint: {"top": 1}
 
-        # Main content container
-        MDRelativeLayout:
-            
-            # Content box
-            MDBoxLayout:
-                orientation: "vertical"
-                spacing: dp(20)
-                size_hint: 0.9, None
-                pos_hint: {"center_x": 0.5, "top": 0.85}  # Moved up to make room for buttons
-                adaptive_height: True
+        # Content box
+        MDFloatLayout:
+            size_hint: 0.9, 0.7
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}  # Moved up to make room for buttons
+            #adaptive_height: True
 
-                # Current timezone info section
-                MDCard:
+            # Current timezone info section
+            MDCard:
+                size_hint_y: 0.23
+                elevation: 0
+                radius: [dp(8)]
+                md_bg_color: 1, 1, 1, 1  # White background
+                pos_hint: {"center_x": 0.5, "top": 1}
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1  # Black border
+                    Line:
+                        width: 2
+                        rounded_rectangle: (self.x, self.y, self.width, self.height, dp(8))
+
+                MDBoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(4)
+                    padding: dp(12)
+
+                    MDLabel:
+                        text: "Current Timezone"
+                        color: 0, 0, 0, 1  # Black text
+                        font_style: "H6"
+                        size_hint_y: None
+                        height: dp(24)
+                        bold: True
+
+                    MDLabel:
+                        text: root.get_dropdown_label(root.current_timezone) if root.current_timezone else "Loading..."
+                        color: 0, 0, 0, 1  # Black text
+                        font_style: "Body2"
+                        markup: True
+                        size_hint_y: None
+                        height: dp(40)
+                        text_size: self.width, None
+                        valign: "top"
+
+            # Timezone selector section
+            MDFloatLayout:
+                size_hint_y: 0.77
+                pos_hint: {"center_x": 0.5, "center_y": 0.38}
+
+                MDLabel:
+                    text: "Select Timezone"
+                    color: 0, 0, 0, 1  # Black text
+                    font_style: "H6"
                     size_hint_y: None
-                    height: dp(90)
+                    size: self.texture_size
+                    pos_hint: {"center_x": 0.5, "top": 0.93}
+                    bold: True
+
+
+                MDCard:
+                    id: timezone_button
+                    size_hint_y: 0.17
+                    pos_hint: {"center_x": 0.5, "top": 0.83}
                     elevation: 0
                     radius: [dp(8)]
                     md_bg_color: 1, 1, 1, 1  # White background
+                    ripple_behavior: True
+                    on_release: root.open_menu()
                     canvas.before:
                         Color:
                             rgba: 0, 0, 0, 1  # Black border
                         Line:
                             width: 2
                             rounded_rectangle: (self.x, self.y, self.width, self.height, dp(8))
-                    
-                    MDBoxLayout:
-                        orientation: "vertical"
-                        spacing: dp(4)
-                        padding: dp(12)
-                        
-                        MDLabel:
-                            text: "Current Timezone"
-                            color: 0, 0, 0, 1  # Black text
-                            font_style: "H6"
-                            size_hint_y: None
-                            height: dp(24)
-                            bold: True
-                            
-                        MDLabel:
-                            text: root.get_dropdown_label(root.current_timezone) if root.current_timezone else "Loading..."
-                            color: 0, 0, 0, 1  # Black text
-                            font_style: "Body2"
-                            markup: True
-                            size_hint_y: None
-                            height: dp(40)
-                            text_size: self.width, None
-                            valign: "top"
-                            
-                # Timezone selector section
-                MDBoxLayout:
-                    orientation: "vertical"
-                    spacing: dp(8)
-                    size_hint_y: None
-                    adaptive_height: True
-                    
-                    MDLabel:
-                        text: "Select Timezone"
-                        color: 0, 0, 0, 1  # Black text
-                        font_style: "H6"
-                        size_hint_y: None
-                        height: dp(24)
-                        bold: True
-                    
-                    MDCard:
-                        id: timezone_button
-                        size_hint_y: None
-                        height: dp(50)  # Further reduced height
-                        elevation: 0
-                        radius: [dp(8)]
-                        md_bg_color: 1, 1, 1, 1  # White background
-                        ripple_behavior: True
-                        on_release: root.open_menu()
-                        canvas.before:
-                            Color:
-                                rgba: 0, 0, 0, 1  # Black border
-                            Line:
-                                width: 2
-                                rounded_rectangle: (self.x, self.y, self.width, self.height, dp(8))
-                        
-                        MDBoxLayout:
-                            orientation: "horizontal"
-                            spacing: dp(8)
-                            padding: dp(12)
-                            
-                            MDIcon:
-                                icon: "earth"
-                                color: 0, 0, 0, 1  # Black icon
-                                size_hint_x: None
-                                width: dp(20)
-                                font_size: dp(18)
-                                
-                            MDBoxLayout:
-                                orientation: "vertical"
-                                spacing: dp(1)
-                                
-                                MDLabel:
-                                    text: root.get_main_label(root.selected_timezone) if root.selected_timezone else "Select a timezone"
-                                    color: 0, 0, 0, 1  # Black text
-                                    font_style: "Subtitle2"
-                                    size_hint_y: None
-                                    height: dp(18)
-                                    text_size: self.width, None
-                                    shorten: True
-                                    shorten_from: "right"
-                                    
-                                MDLabel:
-                                    text: root.get_sub_label(root.selected_timezone) if root.selected_timezone else "Tap to choose your timezone"
-                                    color: 0.3, 0.3, 0.3, 1  # Dark gray text
-                                    font_style: "Caption"
-                                    size_hint_y: None
-                                    height: dp(14)
-                                    text_size: self.width, None
-                                    shorten: True
-                                    shorten_from: "right"
-                                    
-                            MDIcon:
-                                icon: "chevron-down"
-                                color: 0.3, 0.3, 0.3, 1  # Dark gray icon
-                                size_hint_x: None
-                                width: dp(20)
-                                font_size: dp(18)
 
-                # Status info
-                MDLabel:
-                    text: "Note: Changing system timezone may require administrator privileges"
-                    color: 0.5, 0.5, 0.5, 1  # Gray text
-                    font_style: "Caption"
-                    size_hint_y: None
-                    height: dp(30)
-                    halign: "center"
-                    markup: True
-                    text_size: self.width, None
-                    valign: "middle"
-        
+                    MDBoxLayout:
+                        orientation: "horizontal"
+                        spacing: dp(8)
+                        padding: dp(12)
+
+                        MDIcon:
+                            icon: "earth"
+                            color: 0, 0, 0, 1  # Black icon
+                            size_hint_x: None
+                            width: dp(20)
+                            font_size: dp(18)
+
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            spacing: dp(1)
+
+                            MDLabel:
+                                text: root.get_main_label(root.selected_timezone) if root.selected_timezone else "Select a timezone"
+                                color: 0, 0, 0, 1  # Black text
+                                font_style: "Subtitle2"
+                                size_hint_y: None
+                                height: dp(18)
+                                text_size: self.width, None
+                                shorten: True
+                                shorten_from: "right"
+
+                            MDLabel:
+                                text: root.get_sub_label(root.selected_timezone) if root.selected_timezone else "Tap to choose your timezone"
+                                color: 0.3, 0.3, 0.3, 1  # Dark gray text
+                                font_style: "Caption"
+                                size_hint_y: None
+                                height: dp(14)
+                                text_size: self.width, None
+                                shorten: True
+                                shorten_from: "right"
+
+                        MDIcon:
+                            icon: "chevron-down"
+                            color: 0.3, 0.3, 0.3, 1  # Dark gray icon
+                            size_hint_x: None
+                            width: dp(20)
+                            font_size: dp(18)
+
+            # Status info
+            MDLabel:
+                text: "Note: Changing system timezone may require administrator privileges"
+                color: 0.5, 0.5, 0.5, 1  # Gray text
+                font_style: "Caption"
+                size_hint_y: None
+                height: dp(30)
+                halign: "center"
+                markup: True
+                text_size: self.width, None
+                valign: "middle"
+
         # Bottom navigation buttons
         MDCard:
             size_hint_y: None
@@ -169,13 +165,7 @@
             radius: [dp(8), dp(8), 0, 0]  # Rounded top corners only
             md_bg_color: 1, 1, 1, 1  # White background
             pos_hint: {"x": 0, "y": 0}  # Position at bottom
-            canvas.before:
-                Color:
-                    rgba: 0, 0, 0, 1  # Black border
-                Line:
-                    width: 2
-                    points: [self.x, self.y + self.height, self.x + self.width, self.y + self.height]  # Top border only
-            
+
             MDBoxLayout:
                 orientation: "horizontal"
                 spacing: dp(12)
