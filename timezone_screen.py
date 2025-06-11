@@ -1,7 +1,7 @@
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.list import OneLineListItem, TwoLineListItem
-from kivy.properties import StringProperty, BooleanProperty
+from kivy.properties import StringProperty, BooleanProperty, NumericProperty
 from kivy.clock import Clock
 from kivy.metrics import dp
 import os
@@ -61,6 +61,7 @@ class TimezoneScreen(MDScreen):
     selected_timezone = StringProperty("")
     current_timezone = StringProperty("")
     button_active = BooleanProperty(False)
+    selected_index = NumericProperty(0)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -74,6 +75,12 @@ class TimezoneScreen(MDScreen):
             tz = 'UTC'
         self.current_timezone = tz
         self.selected_timezone = tz
+        
+        # Find the index of the current timezone
+        for i, (tz_name, _) in enumerate(TIMEZONES):
+            if tz_name == tz:
+                self.selected_index = i
+                break
         
     def get_current_timezone(self):
         """Get current system timezone with better cross-platform support."""
@@ -151,6 +158,34 @@ class TimezoneScreen(MDScreen):
         utc_offset = get_utc_offset(tz_name)
         return f"{utc_offset} • {time_str}"
 
+    def move_to_next_timezone(self):
+        """Move to the next timezone in the list."""
+        if self.selected_index < len(TIMEZONES) - 1:
+            self.selected_index += 1
+        else:
+            self.selected_index = 0  # Wrap around to the beginning
+        
+        self.selected_timezone = TIMEZONES[self.selected_index][0]
+        
+        # If menu is open, refresh it to show the new selection
+        if self.menu and hasattr(self.menu, 'dismiss'):
+            self.menu.dismiss()
+    
+    def accept_timezone_selection(self):
+        """Accept the currently selected timezone and apply it."""
+        if self.selected_timezone:
+            self.current_timezone = self.selected_timezone
+            
+            # Show feedback to user
+            from kivymd.toast import toast
+            display_name = next((d for t, d in TIMEZONES if t == self.selected_timezone), self.selected_timezone)
+            toast(f"Timezone set to {display_name}")
+            
+            # Try to set system timezone
+            self.set_system_timezone(self.selected_timezone)
+            
+            print(f"Accepted timezone: {self.selected_timezone}")
+
     def open_menu(self):
         """Open the timezone selection menu."""
         if self.menu:
@@ -163,7 +198,7 @@ class TimezoneScreen(MDScreen):
             is_selected = (tz_name == self.selected_timezone)
             
             # Shorten display name if too long
-            shortened_name = display_name if len(display_name) <= 35 else display_name[:32] + "..."
+            shortened_name = display_name if len(display_name) <= 45 else display_name[:42] + "..."
             
             menu_items.append({
                 "viewclass": "CustomMenuItem", 
@@ -184,15 +219,15 @@ class TimezoneScreen(MDScreen):
         self.menu = MDDropdownMenu(
             caller=button,
             items=menu_items,
-            width_mult=6,  # Even wider dropdown for better text display
+            width=dp(50),  # Made wider to accommodate longer text
             max_height=button.height * 6,  # Relative to button height (allows ~6 items)
-            background_color=(1, 1, 1, 1),  # White background
+            md_bg_color=(1, 1, 1, 1),  # White background (updated property name)
             elevation=0,  # No elevation
             border_margin=dp(0),
             position="center",  # Center on the button
         )
         
-        # Add black outline border like the button (without constraining width)
+        # Add black outline border (without constraining width)
         def setup_menu_appearance(dt):
             if self.menu and hasattr(self.menu, 'ids') and 'md_menu' in self.menu.ids:
                 menu_widget = self.menu.ids.md_menu

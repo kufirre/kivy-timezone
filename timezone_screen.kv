@@ -1,5 +1,5 @@
 # Custom menu item with monochrome styling and dividers
-<CustomMenuItem@TwoLineListItem>:
+<CustomMenuItem>:
     theme_text_color: "Custom"
     secondary_theme_text_color: "Custom"
     divider_color: 0.3, 0.3, 0.3, 1
@@ -10,7 +10,7 @@
             points: [self.x + dp(16), self.y, self.x + self.width - dp(16), self.y]
             width: 1
 
-<TimezoneScreen@MDScreen>:
+<TimezoneScreen>:
     name: "timezone_screen"
     md_bg_color: 1, 1, 1, 1  # White background
 
@@ -35,7 +35,7 @@
                 orientation: "vertical"
                 spacing: dp(20)
                 size_hint: 0.9, None
-                pos_hint: {"center_x": 0.5, "top": 0.95}
+                pos_hint: {"center_x": 0.5, "top": 0.85}  # Moved up to make room for buttons
                 adaptive_height: True
 
                 # Current timezone info section
@@ -160,4 +160,56 @@
                     markup: True
                     text_size: self.width, None
                     valign: "middle"
+        
+        # Bottom navigation buttons
+        MDCard:
+            size_hint_y: None
+            height: dp(70)
+            elevation: 0
+            radius: [dp(8), dp(8), 0, 0]  # Rounded top corners only
+            md_bg_color: 1, 1, 1, 1  # White background
+            pos_hint: {"x": 0, "y": 0}  # Position at bottom
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 1  # Black border
+                Line:
+                    width: 2
+                    points: [self.x, self.y + self.height, self.x + self.width, self.y + self.height]  # Top border only
+            
+            MDBoxLayout:
+                orientation: "horizontal"
+                spacing: dp(12)
+                padding: [dp(20), dp(10)]
+                
+                # Next Timezone button
+                MDRaisedButton:
+                    text: "NEXT TIMEZONE"
+                    md_bg_color: 1, 1, 1, 1  # White background
+                    text_color: 0, 0, 0, 1  # Black text
+                    elevation: 0
+                    size_hint_x: 0.5
+                    height: dp(50)
+                    on_release: root.move_to_next_timezone()
+                    canvas.before:
+                        Color:
+                            rgba: 0, 0, 0, 1  # Black border
+                        Line:
+                            width: 2
+                            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(4))
+                
+                # Accept button
+                MDRaisedButton:
+                    text: "ACCEPT"
+                    md_bg_color: 1, 1, 1, 1  # White background
+                    text_color: 0, 0, 0, 1  # Black text
+                    elevation: 0
+                    size_hint_x: 0.5
+                    height: dp(50)
+                    on_release: root.accept_timezone_selection()
+                    canvas.before:
+                        Color:
+                            rgba: 0, 0, 0, 1  # Black border
+                        Line:
+                            width: 2
+                            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(4))
 
